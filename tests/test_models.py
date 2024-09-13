@@ -5,6 +5,9 @@ Test cases for Account Model
 import logging
 import unittest
 import os
+import importlib
+from unittest.mock import patch
+import service
 from service import app
 from service.models import Account, DataValidationError, db
 from tests.factories import AccountFactory
@@ -175,3 +178,11 @@ class TestAccount(unittest.TestCase):
         """It should not Deserialize an account with a TypeError"""
         account = Account()
         self.assertRaises(DataValidationError, account.deserialize, [])
+
+    @patch('service.models.init_db')
+    @patch('sys.exit')
+    def test_init_db_exception(self, mock_exit, mock_init_db):
+        """Test if the app handles the exception when initializing the database."""
+        mock_init_db.side_effect = Exception("Database connection failed")
+        importlib.reload(service)
+        mock_exit.assert_called_once_with(4)
